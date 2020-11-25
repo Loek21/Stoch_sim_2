@@ -5,10 +5,11 @@ import numpy as np
 import sys
 import csv
 
-T_end = 5000
+T_list = [50000]
+T_end = 0
 #INTERVAL_CUSTOMERS = 0.9 # Generate new customers per x seconds
-lambda_list = [0.8, 0.85, 0.9, 0.95]
-n_list = [1, 2, 4]
+lambda_list = [0.9]
+n_list = [1]
 
 def source(env, interval, counter):
     """Source generates customers randomly"""
@@ -54,34 +55,36 @@ def simulate(n, lambd):
 mean_wait_list = []
 conf = 10
 runs = 0
-for lambd in lambda_list:
-    for n in n_list:
-        if n == 1: 
-            conf_radius = 0.09
-        elif n == 2: 
-            conf_radius = 0.045
-        else:
-            conf_radius = 0.0197
-        while conf > conf_radius or runs <= 100:
-            wait_times = []
-            simulate(n, lambd)
+for T in T_list:
+    T_end = T
+    for lambd in lambda_list:
+        for n in n_list:
+            if n == 1: 
+                conf_radius = 0.15
+            elif n == 2: 
+                conf_radius = 0.045
+            else:
+                conf_radius = 0.0197
+            while conf > conf_radius or runs <= 100:
+                wait_times = []
+                simulate(n, lambd)
 
-            mean_wait = np.mean(wait_times)
-            mean_wait_list.append(mean_wait)
-            conf = 1.96 * np.std(mean_wait_list) / np.sqrt(len(mean_wait_list))
-            #print(mean_wait, conf, len(mean_wait_list))
-            runs += 1
+                mean_wait = np.mean(wait_times)
+                mean_wait_list.append(mean_wait)
+                conf = 1.96 * np.std(mean_wait_list) / np.sqrt(len(mean_wait_list))
+                #print(mean_wait, conf, len(mean_wait_list))
+                runs += 1
 
-        #print(mean_wait_list)
-        #print(runs)
-        mean = np.mean(mean_wait_list)
-        std =  np.std(mean_wait_list)
-        #print(np.mean(mean_wait_list), np.std(mean_wait_list))
+            #print(mean_wait_list)
+            #print(runs)
+            mean = np.mean(mean_wait_list)
+            std =  np.std(mean_wait_list)
+            #print(np.mean(mean_wait_list), np.std(mean_wait_list))
 
-        with open('results.csv', 'a') as csv_file:
-            writer = csv.writer(csv_file, delimiter=';')
-            writer.writerow([n, lambd, runs, mean, std, 1.96*std/np.sqrt(runs)])
+            with open('resultstime.csv', 'a') as csv_file:
+                writer = csv.writer(csv_file, delimiter=';')
+                writer.writerow([T, runs, mean, std, 1.96*std/np.sqrt(runs)])
 
-        mean_wait_list = []
-        runs = 0
-        conf = 10
+            mean_wait_list = []
+            runs = 0
+            conf = 10

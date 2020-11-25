@@ -33,7 +33,7 @@ def customer(env, name, counter, mu):
         wait = env.now - arrive
         #print('%7.4f %s: Waited %6.3f' % (env.now, name, wait))
 
-        tib = np.random.exponential(1.0 / mu)
+        tib = mu #np.random.exponential(1.0 / mu)
         yield env.timeout(tib)
         #print('%7.4f %s: Finished' % (env.now, name))
 
@@ -78,7 +78,7 @@ for lambd in lambda_list:
         std =  np.std(mean_wait_list)
         #print(np.mean(mean_wait_list), np.std(mean_wait_list))
 
-        with open('results.csv', 'a') as csv_file:
+        with open('ex4results_deterministic.csv', 'a') as csv_file:
             writer = csv.writer(csv_file, delimiter=';')
             writer.writerow([n, lambd, runs, mean, std, 1.96*std/np.sqrt(runs)])
 

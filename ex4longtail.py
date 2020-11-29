@@ -33,7 +33,7 @@ def customer(env, name, counter, mu):
         wait = env.now - arrive
         #print('%7.4f %s: Waited %6.3f' % (env.now, name, wait))
 
-        tib = 0.5*np.random.exponential(1.0 / 0.5) + 0.5*np.random.exponential(1.0 / 1.5)
+        tib = 0.5*np.random.exponential(0.5) + 0.5*np.random.exponential(1.5)
         yield env.timeout(tib)
         #print('%7.4f %s: Finished' % (env.now, name))
 

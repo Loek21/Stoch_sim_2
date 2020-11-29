@@ -5,37 +5,58 @@ import numpy as np
 import sys
 import csv
 
+# Max simulation time, different arrival rates and number of servers
 T_end = 5000
 lambda_list = [0.8, 0.85, 0.9, 0.95]
 n_list = [1]
 
 def source(env, interval, counter):
-    """Source generates customers randomly"""
+    """
+    Generates new customers according to an exponential distribution untill the time limit has exceeded
+    """
+    # Customer count
     k = 0
     while env.now < T_end:
         mu = 1
-        c = customer(env, 'Customer%02d' % k, counter, mu)
+        c = customer(env, counter, mu)
         env.process(c)
         t = np.random.exponential(1/interval)
         k += 1
+
+        # Arrival of customer holds up the system
         yield env.timeout(t)
 
 
-def customer(env, name, counter, mu):
-    """Customer arrives, is served and leaves."""
+def customer(env, counter, mu):
+    """
+    Customers arrive into the system after which the service time is detemined from an exponential distribution.
+    The time the customer has to wait in the queue is recorded.
+    """
+    # Gets current time
     arrive = env.now
+
+    # Determines service time
     tis = np.random.exponential(1.0 / mu)
+
+    # Applies priority while requesting counter position (*1000 to increase difference)
     with counter.request(priority=int(tis*1000)) as req:
         yield req
+
+        # Waiting time is determined
         wait = env.now - arrive
+
+        # Service time is included to system time
         yield env.timeout(tis)
 
     wait_times.append(wait)
 
 
 def simulate(n, lambd):
-
+    """
+    Performs the steps to carry out a single simulation
+    """
     # Setup and start the simulation
+    # Random seed is set to current time, so each simulation is different
     random.seed(datetime.now())
     env = simpy.Environment()
 
@@ -44,17 +65,22 @@ def simulate(n, lambd):
     env.process(source(env, n*lambd, counter))
     env.run()
 
+# loops through all arrival rates and server numbers
 mean_wait_list = []
 conf = 10
 runs = 0
 for lambd in lambda_list:
     for n in n_list:
+
+        # Sets desired confidence radii (1% of theoretical mean)
         if n == 1:
             conf_radius = 0.03
         elif n == 2:
             conf_radius = 0.045
         else:
             conf_radius = 0.0197
+
+        # Performs simulations untill the desired confidence has been attained
         while conf > conf_radius or runs <= 100:
             wait_times = []
             simulate(n, lambd)
@@ -67,7 +93,8 @@ for lambd in lambda_list:
         mean = np.mean(mean_wait_list)
         std =  np.std(mean_wait_list)
 
-        with open('ex3results.csv', 'a') as csv_file:
+        # Logs number of servers, arrival rate, required runs, mean, std and confidence
+        with open('priority.csv', 'a') as csv_file:
             writer = csv.writer(csv_file, delimiter=';')
             writer.writerow([n, lambd, runs, mean, std, 1.96*std/np.sqrt(runs)])
 
